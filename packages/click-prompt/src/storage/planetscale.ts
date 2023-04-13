@@ -45,34 +45,36 @@ export const queryBuilder = new Kysely<Database>({
   }),
 });
 
-await queryBuilder.schema.createTable('users')
-  .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
-  .addColumn('key_hashed', 'varchar', col => col.notNull())
-  .addColumn('iv', 'varchar', col => col.notNull())
-  .addColumn('key_encrypted', 'varchar', col => col.notNull())
-  .addColumn('deleted', 'integer', col => col.defaultTo(NumBool.False))
-  .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
-  .ifNotExists()
-  .execute();
+export const createInitialTablesIsNotExists = async () => {
+  await queryBuilder.schema.createTable('users')
+    .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
+    .addColumn('key_hashed', 'varchar', col => col.notNull())
+    .addColumn('iv', 'varchar', col => col.notNull())
+    .addColumn('key_encrypted', 'varchar', col => col.notNull())
+    .addColumn('deleted', 'integer', col => col.defaultTo(NumBool.False))
+    .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
+    .ifNotExists()
+    .execute();
 
-await queryBuilder.schema.createTable('conversations')
-  .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
-  .addColumn('user_id', 'integer', col => col.unsigned().notNull().references('users.id'))
-  .addColumn('name', 'varchar', col => col.notNull())
-  .addColumn('deleted', 'integer', col => col.defaultTo(NumBool.False))
-  .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
-  .ifNotExists()
-  .execute();
+  await queryBuilder.schema.createTable('conversations')
+    .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
+    .addColumn('user_id', 'integer', col => col.unsigned().notNull().references('users.id'))
+    .addColumn('name', 'varchar', col => col.notNull())
+    .addColumn('deleted', 'integer', col => col.defaultTo(NumBool.False))
+    .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
+    .ifNotExists()
+    .execute();
 
-await queryBuilder.schema.createTable('chats')
-  .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
-  .addColumn('conversation_id', 'integer', col => col.unsigned().notNull().references('conversations.id'))
-  .addColumn('role', 'varchar', col => col.notNull())
-  .addColumn('content', 'varchar', col => col.notNull())
-  .addColumn('name', 'varchar')
-  .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
-  .ifNotExists()
-  .execute();
+  await queryBuilder.schema.createTable('chats')
+    .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
+    .addColumn('conversation_id', 'integer', col => col.unsigned().notNull().references('conversations.id'))
+    .addColumn('role', 'varchar', col => col.notNull())
+    .addColumn('content', 'varchar', col => col.notNull())
+    .addColumn('name', 'varchar')
+    .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
+    .ifNotExists()
+    .execute();
+};
 
 export const getAllConversionsByUserId = cache(async (userId: number) => {
   return queryBuilder
@@ -184,3 +186,5 @@ export const getUserByKeyHashed = cache(async (keyHashed: string) => {
 //   )}:${padZero(date.getMinutes())}:${padZero(date.getSeconds())}`;
 //   return datetime;
 // }
+
+createInitialTablesIsNotExists();
